@@ -1,0 +1,7 @@
+
+IO_DATA         equ 12
+DISPLAY_DATA    equ 13
+DISPLAY_CTRL    equ 14
+INTERRUPT_FLAGS equ 15
+INTERRUPT_CLEAR equ 16
+

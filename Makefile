@@ -71,6 +71,10 @@ other:
 	naken_asm -l -type bin -o rom.bin -I$(NAKEN_INCLUDE) test/other.asm
 	python3 tools/bin2txt.py rom.bin > rom.txt
 
+joystick:
+	naken_asm -l -type bin -o rom.bin -I$(NAKEN_INCLUDE) test/joystick.asm
+	python3 tools/bin2txt.py rom.bin > rom.txt
+
 lcd:
 	naken_asm -l -type bin -o rom.bin -I$(NAKEN_INCLUDE) test/lcd.asm
 	python3 tools/bin2txt.py rom.bin > rom.txt

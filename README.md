@@ -296,6 +296,17 @@ instructions.
     5: pyjets
     6: rolljets
     7: superbnk
-    8: 4 x 7seg display (not a part of AGC, but used in this project.
-    9: display_ctrl - bit 0: display_busy
+
+Not a part of the real AGC:
+
+    12: IO data (bit 0: connected to LED)
+    13: 4 x 7seg display
+    14: display_ctrl - bit 0: display_busy
+    15: interrupt flags
+    16: interrupt clear
+    17: IO data port 1 (3 bits used for SPI control for LCD)
+    18: SPI transmit (8 bit)
+    19: SPI receive (8 bit)
+    20: SPI control - bit 0: SPI ready
+    21: JOYSTICK - bits 4 to 0 are fire button and 4 axis of the stick
 

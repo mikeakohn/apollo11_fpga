@@ -233,6 +233,7 @@ always @(posedge raw_clk) begin
 
   //ioport_0 <= display_busy;
   //if (display_start && display_busy) display_start <= 0;
+  if (spi_start && spi_busy) spi_start <= 0;
 
   if (reset) begin
     pyjets <= 0;
@@ -254,11 +255,9 @@ always @(posedge raw_clk) begin
         12: ioport_0 <= io_data_in[0];
         13: begin display_data <= io_data_in; display_start <= 1; end
         17: { ioport_3, ioport_2, ioport_1 } <= io_data_in;
-        18: begin spi_tx_buffer <= io_data_in; spi_start <= 0; end
+        18: begin spi_tx_buffer <= io_data_in; spi_start <= 1; end
       endcase
     end else begin
-      if (spi_start && spi_busy) spi_start <= 0;
-
       case (io_address)
          1: io_data_out <= reg_l;
          2: io_data_out <= reg_q;
@@ -274,7 +273,7 @@ always @(posedge raw_clk) begin
         16: io_data_out <= interrupt_clear;
         18: io_data_out <= spi_tx_buffer;
         19: io_data_out <= spi_rx_buffer;
-        20: io_data_out <= spi_busy;
+        20: io_data_out <= { spi_start, ~spi_busy };
         21: io_data_out <= { joystick_4, joystick_3, joystick_2, joystick_1, joystick_0 };
       default: io_data_out <= 0;
       endcase

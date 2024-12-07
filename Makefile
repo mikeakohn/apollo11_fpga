@@ -4,7 +4,8 @@ PROGRAM=agc
 SOURCE= \
   src/$(PROGRAM).v \
   src/display_spi.v \
-  src/memory.v
+  src/memory.v \
+  src/spi.v
 
 default:
 	yosys -q -p "synth_ice40 -top $(PROGRAM) -json $(PROGRAM).json" $(SOURCE)

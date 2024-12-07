@@ -16,10 +16,16 @@ set_io --warn-no-port column[3] C5
 
 # GPIO.
 set_io --warn-no-port ioport_0  C14
-#set_io --warn-no-port ioport_1  G14
-#set_io --warn-no-port ioport_2  H12
-#set_io --warn-no-port ioport_3  J12
-#set_io --warn-no-port ioport_4  K3
+set_io --warn-no-port ioport_1  G14
+set_io --warn-no-port ioport_2  H12
+set_io --warn-no-port ioport_3  J12
+
+#Joystick
+set_io --warn-no-port joystick_0  K3
+set_io --warn-no-port joystick_1  M3
+set_io --warn-no-port joystick_2  G1
+set_io --warn-no-port joystick_3  H1
+set_io --warn-no-port joystick_4  J1
 
 # SPI display.
 set_io --warn-no-port display_cs  E12
@@ -28,10 +34,10 @@ set_io --warn-no-port display_do  F12
 #set_io --warn-no-port display_di  F14
 
 # SPI peripheral 0.
-#set_io --warn-no-port spi_cs_0  J12
-#set_io --warn-no-port spi_clk_0  K12
-#set_io --warn-no-port spi_mosi_0 K14
-#set_io --warn-no-port spi_miso_0 H11
+#set_io --warn-no-port spi_cs_0   J12
+set_io --warn-no-port spi_clk_0  K12
+set_io --warn-no-port spi_mosi_0 K14
+set_io --warn-no-port spi_miso_0 H11
 
 # SPI peripheral 1.
 #set_io --warn-no-port spi_cs_1  K3

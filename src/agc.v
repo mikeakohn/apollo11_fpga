@@ -15,17 +15,24 @@ module agc
   //output speaker_p,
   //output speaker_m,
   output ioport_0,
-  //output ioport_1,
-  //output ioport_2,
-  //output ioport_3,
-  //output ioport_4,
+  output ioport_1,
+  output ioport_2,
+  output ioport_3,
+  input  joystick_0,
+  input  joystick_1,
+  input  joystick_2,
+  input  joystick_3,
+  input  joystick_4,
   input  button_reset,
   input  button_halt,
   input  button_program_select,
   input  button_0,
   output display_cs,
   output display_clk,
-  output display_do
+  output display_do,
+  output spi_clk_0,
+  output spi_mosi_0,
+  input  spi_miso_0
 );
 
 // iceFUN 8x4 LEDs used for debugging.
@@ -1213,10 +1220,21 @@ memory memory_0(
   .interrupt_flags  (interrupt_flags),
   .interrupt_clear  (interrupt_clear),
   .ioport_0         (ioport_0),
+  .ioport_1         (ioport_1),
+  .ioport_2         (ioport_2),
+  .ioport_3         (ioport_3),
+  .joystick_0       (joystick_0),
+  .joystick_1       (joystick_1),
+  .joystick_2       (joystick_2),
+  .joystick_3       (joystick_3),
+  .joystick_4       (joystick_4),
   .button_0         (button_0),
   .display_cs       (display_cs),
   .display_clk      (display_clk),
   .display_do       (display_do),
+  .spi_clk_0        (spi_clk_0),
+  .spi_mosi_0       (spi_mosi_0),
+  .spi_miso_0       (spi_miso_0),
   .reset            (mem_reset)
 );
 

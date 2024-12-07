@@ -30,10 +30,15 @@ module memory
   //output speaker_p,
   //output speaker_m,
   output reg ioport_0,
-  //output ioport_1,
-  //output ioport_2,
-  //output ioport_3,
-  //output ioport_4,
+  output reg ioport_1,
+  output reg ioport_2,
+  output reg ioport_3,
+  output reg ioport_4,
+  input joystick_0,
+  input joystick_1,
+  input joystick_2,
+  input joystick_3,
+  input joystick_4,
   input interrupt_enable,
   output [15:0] out_a,
   output [14:0] out_l,
@@ -47,6 +52,9 @@ module memory
   output display_clk,
   output display_cs,
   output display_do,
+  output spi_clk_0,
+  output spi_mosi_0,
+  input  spi_miso_0,
   input reset
 );
 
@@ -104,6 +112,11 @@ reg [9:0]  clock_div_6000;
 reg display_start;
 reg [15:0] display_data;
 wire display_busy;
+
+wire [7:0] spi_rx_buffer;
+reg  [7:0] spi_tx_buffer;
+wire spi_busy;
+reg spi_start;
 
 // Each erasable bank is 256 words (0x100).
 // 00000 - 00377 (0x0000 - 0x00ff)  E0 Overlap
@@ -240,8 +253,12 @@ always @(posedge raw_clk) begin
         // Not in the real AGC.
         12: ioport_0 <= io_data_in[0];
         13: begin display_data <= io_data_in; display_start <= 1; end
+        17: { ioport_3, ioport_2, ioport_1 } <= io_data_in;
+        18: begin spi_tx_buffer <= io_data_in; spi_start <= 0; end
       endcase
     end else begin
+      if (spi_start && spi_busy) spi_start <= 0;
+
       case (io_address)
          1: io_data_out <= reg_l;
          2: io_data_out <= reg_q;
@@ -255,6 +272,10 @@ always @(posedge raw_clk) begin
         14: io_data_out <= { display_busy };
         15: io_data_out <= interrupt_flags;
         16: io_data_out <= interrupt_clear;
+        18: io_data_out <= spi_tx_buffer;
+        19: io_data_out <= spi_rx_buffer;
+        20: io_data_out <= spi_busy;
+        21: io_data_out <= { joystick_4, joystick_3, joystick_2, joystick_1, joystick_0 };
       default: io_data_out <= 0;
       endcase
     end
@@ -344,6 +365,18 @@ display_spi display_spi_0
   .cs      (display_cs),
   .sclk    (display_clk),
   .mosi    (display_do)
+);
+
+spi spi_0
+(
+  .raw_clk  (raw_clk),
+  .start    (spi_start),
+  .data_tx  (spi_tx_buffer),
+  .data_rx  (spi_rx_buffer),
+  .busy     (spi_busy),
+  .sclk     (spi_clk_0),
+  .mosi     (spi_mosi_0),
+  .miso     (spi_miso_0)
 );
 
 endmodule

@@ -11,6 +11,7 @@ lem_x         equ 103
 lem_y         equ 104
 counter       equ 105
 temp          equ 106
+save_q        equ 107
 
 lem_ram_data_start  equ 120
 lem_ram_data_end    equ 134
@@ -67,7 +68,7 @@ horizon_data:
   .dc16 SSD1331_DRAW_RECT
   .dc16    0,   21,   95,  63
   .dc16 0x00, 0x00, 0x00
-  .dc16 0x00, 0x00, 0x00 
+  .dc16 0x00, 0x00, 0x00
 horizon_data_end:
 
 ground_data:
@@ -107,16 +108,28 @@ spi_idle:
   .dc16 0x07
 spi_command:
   .dc16 0x01
-one:
+const_1:
   .dc16 0x01
-seven:
+const_7:
   .dc16 7
-const_64:
-  .dc16 64 
+;const_64:
+;  .dc16 64
 delay_length:
   .dc16 0x7f20
 marker:
   .dc16 0x1234
+lem_x_start:
+  .dc16 80
+lem_y_start:
+  .dc16 50
+offset_x0:
+  .dc16 1
+offset_y0:
+  .dc16 2
+offset_x1:
+  .dc16 3
+offset_y1:
+  .dc16 4
 
 lcd_init_start:
   .dc16 lcd_init_data
@@ -189,6 +202,48 @@ main:
   ts load_end
   tc memcpy
 
+  ca lem_x_start
+  ts lem_x
+  ca lem_y_start
+  ts lem_y
+  tc lem_move
+
+  ca marker
+  write DISPLAY_DATA
+  edrupt 0
+
+lem_move:
+  qxch save_q
+
+  ;; Erase the lander.
+  ca lem_erase_start
+  ts load_start
+  ca lem_erase_end
+  ts load_end
+  tc lcd_load
+
+  ca lem_x
+  index offset_x0
+  ts lem_ram_data_start
+  index offset_x0
+  ts lem_ram_erase_start
+  ad const_7
+  index offset_x1
+  ts lem_ram_data_start
+  index offset_x1
+  ts lem_ram_erase_start
+
+  ca lem_y
+  index offset_y0
+  ts lem_ram_data_start
+  index offset_y0
+  ts lem_ram_erase_start
+  ad const_7
+  index offset_y1
+  ts lem_ram_data_start
+  index offset_y1
+  ts lem_ram_erase_start
+
   ;; Draw the lander.
   ca lem_start
   ts load_start
@@ -196,14 +251,7 @@ main:
   ts load_end
   tc lcd_load
 
-  ca marker
-  write DISPLAY_DATA
-  edrupt 0
-
-set_lem_coordinates:
-  return
-
-set_erase_coordinates:
+  qxch save_q
   return
 
 lcd_load:
@@ -218,7 +266,7 @@ lcd_load_next_byte:
   ;; ptr += 1;
   aug load_start
 lcd_load_busy:
-  ca one
+  ca const_1
   rand SPI_CTRL
   bzf lcd_load_busy
   ca load_start

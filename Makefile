@@ -79,6 +79,10 @@ lcd:
 	naken_asm -l -type bin -o rom.bin -I$(NAKEN_INCLUDE) test/lcd.asm
 	python3 tools/bin2txt.py rom.bin > rom.txt
 
+lunar_lander:
+	naken_asm -l -type bin -o rom.bin -I$(NAKEN_INCLUDE) test/lunar_lander.asm
+	python3 tools/bin2txt.py rom.bin > rom.txt
+
 clean:
 	@rm -f $(PROGRAM).bin $(PROGRAM).json $(PROGRAM).asc *.lst *.bin
 	@echo "Clean!"

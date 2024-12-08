@@ -77,6 +77,11 @@ reg [15:0] reg_a;
 reg [14:0] reg_l;
 reg [15:0] reg_q;
 reg [11:0] reg_z;
+reg [15:0] arupt;
+reg [15:0] lrupt;
+reg [15:0] qrupt;
+reg [15:0] samptime1;
+reg [15:0] samptime2;
 reg [15:0] zrupt;
 reg [15:0] brupt;
 reg [2:0] eb;
@@ -184,6 +189,11 @@ always @(posedge raw_clk) begin
         'o4: fb    <= data_in[14:10];
         'o5: reg_z <= data_in[11:0];
         'o6: begin fb <= data_in[14:10]; eb <= data_in[2:0]; end
+        'o10: arupt <= data_in[15:0];
+        'o11: lrupt <= data_in[15:0];
+        'o12: qrupt <= data_in[15:0];
+        'o13: samptime1 <= data_in[15:0];
+        'o14: samptime2 <= data_in[15:0];
         'o15: zrupt <= data_in[15:0];
         'o17: brupt <= data_in[15:0];
         'o20: cyr   <= { data_in[0],  data_in[14:1] };
@@ -210,6 +220,11 @@ always @(posedge raw_clk) begin
          'o5: data_out_reg <= reg_z;
          'o6: data_out_reg <= { fb, 7'b0, eb };
          'o7: data_out_reg <= 0;
+        'o10: data_out_reg <= arupt;
+        'o11: data_out_reg <= lrupt;
+        'o12: data_out_reg <= qrupt;
+        'o13: data_out_reg <= samptime1;
+        'o14: data_out_reg <= samptime2;
         'o15: data_out_reg <= zrupt;
         'o17: data_out_reg <= brupt;
         'o20: data_out_reg <= cyr;

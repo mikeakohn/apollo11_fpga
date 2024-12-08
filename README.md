@@ -310,3 +310,31 @@ Not a part of the real AGC:
     20: SPI control - bit 0: SPI ready
     21: JOYSTICK - bits 4 to 0 are fire button and 4 axis of the stick
 
+Interrupts
+==========
+
+There are several interrupts that can happen in the AGC. The ones
+currently supported here are:
+
+    T6RUPT - TIME6 decremented to 0.
+    T5RUPT - TIME5 overflowed (digital autopilot thrust).
+    T3RUPT - TIME3 overflowed (autopilot).
+    T4RUPT - TIME4 overflowed (task scheduler).
+
+When an interrupt flag goes high, an interrupt will happen at the
+start of CPU instruction processing. Interrupts will not happen in
+the middle of reading the second word of an instruction that is an
+"extra code", in the middle of a "skip" instruction, and in the
+middle of an index instruction. When an interrupt happens, the
+following occurs:
+
+1. Copy Z to ZRUPT.
+2. The opcode instruction at location Z is copied to BRUPT.
+3. Load Z with interrupt vector address.
+
+On resume the following happens:
+
+1. Copy ZRUPT to Z.
+2. Copy BRUPT to next instruction to be decoded register.
+3. Increment Z.
+

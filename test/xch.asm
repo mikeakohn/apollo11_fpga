@@ -13,6 +13,8 @@
 ;; physically it's location 06000 (bank 2).
 .org 04000
 main:
+  tc test
+
   ca 02001
   ts 100
   ca 02000
@@ -34,5 +36,15 @@ main:
 
   write DISPLAY_DATA
 
+  edrupt 0
+
+test:
+  ca 02000
+  ts QRUPT
+  ;qxch QRUPT
+  ;qxch QRUPT
+  ;ca REG_Q
+  ca QRUPT
+  write DISPLAY_DATA
   edrupt 0
 

@@ -85,7 +85,7 @@ assign temp_d = { mem_read[14:0], temp[13:0] };
 reg [29:0] temp_das;
 
 reg interrupt_enable;
-reg interrupt_on;
+reg in_interrupt;
 wire [5:0]  interrupt_flags;
 reg  [5:0]  interrupt_clear;
 reg  [2:0]  interrupt_index;
@@ -267,7 +267,7 @@ always @(posedge clk) begin
           state <= STATE_DELAY_LOOP;
           // FIXME: Does this default to 0?
           interrupt_enable <= 0;
-          interrupt_on     <= 0;
+          in_interrupt     <= 0;
         end
       STATE_DELAY_LOOP:
         begin
@@ -295,7 +295,7 @@ always @(posedge clk) begin
           // Can't interrupt in the middle of an extra code or a skip or
           // if index is updating the next instruction.
           if (interrupt_flags != 0 &&
-              interrupt_on == 0 &&
+              in_interrupt == 0 &&
               skip == 0 &&
               extra_code == 0 &&
               index_enable == 0)
@@ -811,16 +811,16 @@ always @(posedge clk) begin
         end
       STATE_EXECUTE_XCH_1:
         begin
-          mem_bus_enable <= 0;
+          mem_bus_enable   <= 0;
           mem_write_enable <= 0;
-          state <= STATE_EXECUTE_XCH_2;
+          state            <= STATE_EXECUTE_XCH_2;
         end
       STATE_EXECUTE_XCH_2:
         begin
-          mem_bus_enable <= 1;
+          mem_bus_enable   <= 1;
           mem_write_enable <= 1;
-          mem_address <= addr_xch;
-          mem_write <= temp;
+          mem_address      <= addr_xch;
+          mem_write        <= temp;
 
           state <= STATE_EXECUTE_XCH_3;
         end
@@ -893,7 +893,7 @@ always @(posedge clk) begin
           mem_write_enable <= 0;
 
           instruction  <= brupt;
-          interrupt_on <= 0;
+          in_interrupt <= 0;
           state <= STATE_FETCH_UPDATE_Z_0;
 //temp <= zrupt;
 //temp <= brupt;
@@ -1072,7 +1072,7 @@ always @(posedge clk) begin
           mem_write        <= reg_z;
           mem_address      <= ADDR_ZRUPT;
 
-          interrupt_on <= 1;
+          in_interrupt <= 1;
 
           if (interrupt_flags[0] == 1)
             interrupt_index = 0;

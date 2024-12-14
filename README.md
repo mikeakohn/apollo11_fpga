@@ -132,15 +132,15 @@ and some of them were removed.
     ddoubl  Alias of: das a
     lxch    Exchange L and [K]
     zl      Alias of: lxch 7 (exchange L and hardcoded 0)
-    incr    Increment memory: [K] = [K] + 1
-    ads     Add accumulator to storage: [K] = A + [K]
+    incr    Increment memory (1's complement): [K] = [K] + 1
+    ads     Add accumulator to storage (1's complement): [K] = A + [K]
     ca      Clear and add: A = [K]
     cae     Alias of: ca
     caf     Alias of: ca
     noop    Alias of: ca A
     cs      Clear and subtract: A = ~[K]
     com     Alias of: cs A 
-    index   Add [K] to the K in the next instruction
+    index   Add [K] (1's complement) to the K in the next instruction
     resume  Resume from interrupt:
     dxch    Double exchange: A = [K], L = [K+1], [K] = A, [K+1] = L
     dtcf    Alias of: dxch 5
@@ -149,7 +149,7 @@ and some of them were removed.
     ovsk    Skip next instruction if overflow is set.
     tcaa    Transfer A to Z: Z = A, if +overflow A -= 1, if -overflow A += 1
     xch     Exchange A and K: A = [K], [K] = A
-    ad      Add memory to accumulator. A = A + [K]
+    ad      Add memory to accumulator (1's complement). A = A + [K]
     mask    Logical AND: A = A & [K]
 
 These opcodes are excuted if the extra_code flag is set (by the extend
@@ -175,7 +175,7 @@ instruction). All instructions here clear extra_code except for index.
     dcom    Complement AL: { A, L } = ~{ A, L }
     index   Add [K] to the K in the next instruction
     bzmf    Branch if A <= 0: if A <= +-0: Z = K
-    su      Subtract storage from accumulator: A = A - [K]
+    su      Subtract storage from accumulator (1's complement): A = A - [K]
     mp      Multiply A * K: A,L = A * [K]
 
 Memory Map

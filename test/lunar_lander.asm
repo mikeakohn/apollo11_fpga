@@ -15,10 +15,17 @@ save_q        equ 107
 velocity      equ 108
 lm_fixed_y    equ 109
 
+;; The image of the lunar lander and erased lunar lander is between
+;; 120 to 148.
+;; The square is 11 words long.
+;lm_ram_data_start  equ 120
+;lm_ram_data_end    equ 134
+;lm_ram_erase_start equ 134
+;lm_ram_erase_end   equ 148
 lm_ram_data_start  equ 120
-lm_ram_data_end    equ 134
-lm_ram_erase_start equ 134
-lm_ram_erase_end   equ 148
+lm_ram_data_end    equ 131
+lm_ram_erase_start equ 131
+lm_ram_erase_end   equ 142
 
 .org 02000
 
@@ -110,6 +117,8 @@ const_1:
   .dc16 0x01
 const_7:
   .dc16 7
+const_neg_1:
+  .dc16 0x7ffe
 ;const_64:
 ;  .dc16 64
 delay_length_short:
@@ -121,7 +130,7 @@ marker_0:
 marker_1:
   .dc16 0x9876
 lm_x_start:
-  .dc16 30
+  .dc16 30 << 4
 lm_y_start:
   .dc16 54 << 4
 offset_x0:
@@ -230,8 +239,8 @@ main:
   write DISPLAY_DATA
   tc wait_display
 
-  ;ca ZERO
-  ca debug_velocity
+  ca ZERO
+  ;ca debug_velocity
   ts velocity
 
 game_loop:
@@ -241,10 +250,19 @@ game_loop:
   ca delay_length_200ms
   tc delay
 
-  dim velocity
+  ;; Increase velocity by 1.
+  ;dim velocity
+  ca const_neg_1
+  ads velocity
+
+  ;; Using velocity, move lundar lander.
   index velocity
   ca gravity_velocity_0
   ads lm_y
+
+;ca lm_y
+;write DISPLAY_DATA
+;edrupt 0
 
   ;tc lm_move
 ;ca TIME4
@@ -252,9 +270,10 @@ game_loop:
 ;write DISPLAY_DATA
 ;edrupt 0
 
+  ;; If velocity is too fast, just exit.
   ca gravity_end
   su velocity
-  bzf game_loop_exit
+  bzmf game_loop_exit
 
   tc game_loop
 
@@ -277,7 +296,20 @@ lm_move:
   ts load_end
   tc lcd_load
 
+  ;; Delay before redraw.
+  ;ca delay_length_short
+  ;tc delay
+
+  ;; Draw the lander.
   ca lm_x
+  ts SR
+  ca SR
+  ts SR
+  ca SR
+  ts SR
+  ca SR
+  ts SR
+  ca SR
   index offset_x0
   ts lm_ram_data_start
   index offset_x0

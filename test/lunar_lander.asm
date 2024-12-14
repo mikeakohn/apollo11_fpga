@@ -113,9 +113,7 @@ const_7:
 ;const_64:
 ;  .dc16 64
 delay_length_short:
-  .dc16 0x7f20
-delay_length_long:
-  .dc16 0x7000
+  .dc16 0x7ff0
 delay_length_200ms:
   .dc16 0x7feb
 marker_0:
@@ -163,6 +161,12 @@ lm_rom_start:
   .dc16 lm_data
 ground_y0:
   .dc16 21
+debug_velocity:
+  .dc16 0x7ffc
+gravity_start:
+  .dc16 gravity_table
+gravity_end:
+  .dc16 gravity_table_end - 1
 
 ;; Due to the way memory is banked, the address written as 04000 but
 ;; physically it's location 06000 (bank 2).
@@ -178,7 +182,7 @@ main:
   ts load_end
   tc lcd_load
 
-  ca delay_length_long
+  ca delay_length_short
   tc delay
 
   ;; Draw the horizon.
@@ -188,7 +192,7 @@ main:
   ts load_end
   tc lcd_load
 
-  ca delay_length_long
+  ca delay_length_short
   tc delay
 
   ;; Draw the ground.
@@ -198,7 +202,7 @@ main:
   ts load_end
   tc lcd_load
 
-  ca delay_length_long
+  ca delay_length_short
   tc delay
 
   ;; Draw the landing pad.
@@ -226,25 +230,38 @@ main:
   write DISPLAY_DATA
   tc wait_display
 
-  ca ZERO
+  ;ca ZERO
+  ca debug_velocity
   ts velocity
 
 game_loop:
   tc lm_move
 
-
+  ;; delay 200ms.
   ca delay_length_200ms
   tc delay
+
   dim velocity
-  ca velocity
-  ads lm_fixed_y
+  index velocity
+  ca gravity_velocity_0
+  ads lm_y
 
   ;tc lm_move
+;ca TIME4
+;ca counter
+;write DISPLAY_DATA
 ;edrupt 0
+
+  ca gravity_end
+  su velocity
+  bzf game_loop_exit
 
   tc game_loop
 
+game_loop_exit:
+
   ca marker_1
+  ;ca lm_y
   write DISPLAY_DATA
   tc wait_display
 
@@ -336,12 +353,19 @@ memcpy:
 
 delay:
   ts counter
+  ;ca marker_0
 delay_outer_loop:
   ca TIME4
-  ts temp
+  ;ts temp
+  ts REG_L
 delay_loop:
   ca TIME4
-  su temp
+  ;su temp
+  rxor REG_L
+
+;write DISPLAY_DATA
+;edrupt 0
+
   bzf delay_loop
   incr counter
   ca counter
@@ -349,14 +373,14 @@ delay_loop:
   return
 
 wait_display:
-  qxch temp
+  ;qxch temp
 wait_display_busy:
   ca const_1
   rand DISPLAY_CTRL
   bzf wait_busy_exit
-  tc wait_display_busy
+  tcf wait_display_busy
 wait_busy_exit:
-  qxch temp
+  ;qxch temp
   return
 
 gravity_table:
@@ -378,4 +402,5 @@ gravity_velocity_0:
   .dc16 0x0025, 0x0026, 0x0027, 0x0027, 0x0028, 0x0029, 0x002a, 0x002b
   .dc16 0x002c, 0x002d, 0x002e, 0x002f, 0x0030, 0x0030, 0x0031, 0x0032
   .dc16 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039
+gravity_table_end:
 

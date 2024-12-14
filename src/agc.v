@@ -133,6 +133,7 @@ reg [27:0] mul_c;
 reg skip;
 reg index_enable;
 reg [11:0] index_k;
+reg index_carry;
 reg exch_count;
 
 parameter ALU_OP_ADD  = 0;
@@ -321,53 +322,36 @@ always @(posedge clk) begin
           mem_bus_enable   <= 0;
           mem_write_enable <= 0;
 
-/*
-          if (index_enable == 1)
-            instruction[9:0] <= instruction[9:0] + index_k;
-          else if (index_enable == 2)
-            instruction[11:0] <= instruction[9:0] + index_k;
-*/
-
           if (index_enable == 1 && instruction != 6) begin
-            instruction[11:0] <= instruction[11:0] + index_k;
+            { index_carry, instruction[11:0] } <= instruction[11:0] + index_k;
             index_enable <= 0;
-          end
-
-          if (extra_code == 1) begin
-            if (skip == 1) begin
-              skip <= 0;
-              extra_code <= 0;
-              state <= STATE_FETCH_OP_0;
-            end else begin
-              state <= STATE_START_EXTRA;
-            end
+            state <= STATE_FETCH_UPDATE_Z_1;
           end else begin
-            if (skip == 1 && instruction != 6) begin
-              // FIXME: Could be a better way to do this. If this is a skip
-              // but the instruction is an extra code, need to read in the
-              // next word so it can be skipped also.
-              skip <= 0;
-              state <= STATE_FETCH_OP_0;
-            end else begin
-              state <= STATE_START_DECODE;
+            if (index_carry) begin
+              instruction[11:0] <= instruction[11:0] + 1;
+              index_carry <= 0;
             end
-          end
 
-/*
-          if (extra_code == 1) begin
-            state <= STATE_START_EXTRA;
-          //end else if (skip == 1 && instruction != 6) begin
-          end else if (skip == 1) begin
-            if (instruction != 6) begin
-              skip <= 0;
-              state <= STATE_FETCH_OP_0;
+            if (extra_code == 1) begin
+              if (skip == 1) begin
+                skip <= 0;
+                extra_code <= 0;
+                state <= STATE_FETCH_OP_0;
+              end else begin
+                state <= STATE_START_EXTRA;
+              end
             end else begin
-              state <= STATE_START_DECODE;
+              if (skip == 1 && instruction != 6) begin
+                // FIXME: Could be a better way to do this. If this is a skip
+                // but the instruction is an extra code, need to read in the
+                // next word so it can be skipped also.
+                skip <= 0;
+                state <= STATE_FETCH_OP_0;
+              end else begin
+                state <= STATE_START_DECODE;
+              end
             end
-          end else begin
-            state <= STATE_START_DECODE;
           end
-*/
         end
       STATE_START_DECODE:
         begin

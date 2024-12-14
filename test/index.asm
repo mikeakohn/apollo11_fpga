@@ -4,7 +4,7 @@
 .include "test/extra_io.inc"
 
 .org 02000
-  .dc16 2
+  .dc16 0x7ffe
   .dc16 0x4765
   .dc16 0x3000
   .dc16 0x1000
@@ -19,7 +19,7 @@ main:
   ;index 100
 
   index 02000
-  ca 02000
+  ca 02004
   write DISPLAY_DATA
 
   ;; This is indexing an instruction with an extra code.

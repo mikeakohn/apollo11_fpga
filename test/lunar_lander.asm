@@ -12,16 +12,16 @@ lm_y          equ 104
 counter       equ 105
 temp          equ 106
 save_q        equ 107
-velocity      equ 108
-lm_fixed_y    equ 109
+velocity_x    equ 108
+velocity_y    equ 109
+lm_fixed_x    equ 110
+lm_fixed_y    equ 111
+lm_int_x      equ 112
+lm_int_y      equ 113
 
 ;; The image of the lunar lander and erased lunar lander is between
 ;; 120 to 148.
 ;; The square is 11 words long.
-;lm_ram_data_start  equ 120
-;lm_ram_data_end    equ 134
-;lm_ram_erase_start equ 134
-;lm_ram_erase_end   equ 148
 lm_ram_data_start  equ 120
 lm_ram_data_end    equ 131
 lm_ram_erase_start equ 131
@@ -94,6 +94,20 @@ landing_pad_data:
   .dc16 0x00, 0x00, 0xff
 landing_pad_data_end:
 
+landing_pad_crash_data:
+  .dc16 SSD1331_DRAW_RECT
+  .dc16   40,   10,   56,  20
+  .dc16 0xff, 0x00, 0x00
+  .dc16 0xff, 0x00, 0x00
+landing_pad_crash_data_end:
+
+landing_pad_safe_data:
+  .dc16 SSD1331_DRAW_RECT
+  .dc16   40,   10,   56,  20
+  .dc16 0x00, 0xff, 0x00
+  .dc16 0x00, 0xff, 0x00
+landing_pad_safe_data_end:
+
 ;; horizon is (0, 21) - (95,  63)
 lm_data:
   .dc16 SSD1331_DRAW_RECT
@@ -114,7 +128,11 @@ spi_idle:
 spi_command:
   .dc16 0x01
 const_1:
-  .dc16 0x01
+  .dc16 0x0001
+const_2:
+  .dc16 0x0002
+const_8:
+  .dc16 0x0008
 const_7:
   .dc16 7
 const_neg_1:
@@ -129,8 +147,10 @@ marker_0:
   .dc16 0x1234
 marker_1:
   .dc16 0x9876
+marker_2:
+  .dc16 0x1122
 lm_x_start:
-  .dc16 30 << 4
+  .dc16 88 << 4
 lm_y_start:
   .dc16 54 << 4
 offset_x0:
@@ -158,6 +178,14 @@ landing_pad_start:
   .dc16 landing_pad_data
 landing_pad_end:
   .dc16 landing_pad_data_end - 1
+landing_pad_crash_start:
+  .dc16 landing_pad_crash_data
+landing_pad_crash_end:
+  .dc16 landing_pad_crash_data_end - 1
+landing_pad_safe_start:
+  .dc16 landing_pad_safe_data
+landing_pad_safe_end:
+  .dc16 landing_pad_safe_data_end - 1
 lm_start:
   .dc16 lm_ram_data_start
 lm_end:
@@ -170,12 +198,15 @@ lm_rom_start:
   .dc16 lm_data
 ground_y0:
   .dc16 21
-debug_velocity:
-  .dc16 0x7ffc
+;debug_velocity:
+;  .dc16 0x7ffc
+
+.if 0
 gravity_start:
   .dc16 gravity_table
 gravity_end:
   .dc16 gravity_table_end - 1
+.endif
 
 ;; Due to the way memory is banked, the address written as 04000 but
 ;; physically it's location 06000 (bank 2).
@@ -240,8 +271,8 @@ main:
   tc wait_display
 
   ca ZERO
-  ;ca debug_velocity
-  ts velocity
+  ts velocity_x
+  ts velocity_y
 
 game_loop:
   tc lm_move
@@ -250,39 +281,92 @@ game_loop:
   ca delay_length_200ms
   tc delay
 
-  ;; Increase velocity by 1.
-  ;dim velocity
+  ;; Joystick:
+  ;; bit 0 = right.
+  ;; bit 1 = left.
+  ;; bit 2 = down.
+  ;; bit 3 = up.
+  ;; bit 4 = fire.
+
+  ;; If joystick isn't up, increase velocity by 1.
+  ;; If joystick is up, decrease velocity by 1.
+  ca const_8
+  rand JOYSTICK
+  ;write DISPLAY_DATA
+  bzf game_loop_joystick_up
   ca const_neg_1
-  ads velocity
+  ads velocity_y
+  tcf game_loop_joystick_up_done
+game_loop_joystick_up:
+  ca const_1
+  ads velocity_y
+game_loop_joystick_up_done:
+
+  ;; If joystick is left move velocity left by 1.
+  ca const_2
+  rand JOYSTICK
+  bzf game_loop_joystick_left
+  tcf game_loop_joystick_left_done
+game_loop_joystick_left:
+  ca const_1
+  ads velocity_x
+game_loop_joystick_left_done:
+
+  ;; If joystick is right move velocity right by 1.
+  ca const_1
+  rand JOYSTICK
+  bzf game_loop_joystick_right
+  tcf game_loop_joystick_right_done
+game_loop_joystick_right:
+  ca const_neg_1
+  ads velocity_x
+game_loop_joystick_right_done:
 
   ;; Using velocity, move lundar lander.
-  index velocity
+  index velocity_y
   ca gravity_velocity_0
   ads lm_y
 
-;ca lm_y
-;write DISPLAY_DATA
-;edrupt 0
+  index velocity_x
+  ca gravity_velocity_0
+  ads lm_x
 
-  ;tc lm_move
-;ca TIME4
-;ca counter
-;write DISPLAY_DATA
-;edrupt 0
-
-  ;; If velocity is too fast, just exit.
-  ca gravity_end
-  su velocity
-  bzmf game_loop_exit
+  ;; If lunar lander is past ground, crash it. If it's equal to the
+  ;; ground, make it safe.
+  ca horizon_data + 2
+  ts temp
+  ca lm_int_y
+  su temp
+  bzf game_loop_safe
+  bzmf game_loop_crash
 
   tc game_loop
 
-game_loop_exit:
-
+game_loop_safe:
   ca marker_1
-  ;ca lm_y
   write DISPLAY_DATA
   tc wait_display
+
+  ;; Draw the green landing pad.
+  ca landing_pad_safe_start
+  ts load_start
+  ca landing_pad_safe_end
+  ts load_end
+  tc lcd_load
+
+  edrupt 0
+
+game_loop_crash:
+  ca marker_2
+  write DISPLAY_DATA
+  tc wait_display
+
+  ;; Draw the red landing pad.
+  ca landing_pad_crash_start
+  ts load_start
+  ca landing_pad_crash_end
+  ts load_end
+  tc lcd_load
 
   edrupt 0
 
@@ -310,6 +394,7 @@ lm_move:
   ca SR
   ts SR
   ca SR
+  ts lm_int_x
   index offset_x0
   ts lm_ram_data_start
   index offset_x0
@@ -329,6 +414,7 @@ lm_move:
   ca SR
   ts SR
   ca SR
+  ts lm_int_y
   index offset_y0
   ts lm_ram_data_start
   index offset_y0

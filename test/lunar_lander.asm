@@ -162,6 +162,11 @@ offset_x1:
 offset_y1:
   .dc16 4
 
+landing_pad_x0:
+  .dc16 39
+landing_pad_x1:
+  .dc16 56 - 8
+
 lcd_init_start:
   .dc16 lcd_init_data
 lcd_init_end:
@@ -343,6 +348,18 @@ game_loop_joystick_right_done:
   tc game_loop
 
 game_loop_safe:
+  ;; Check to make sure the lander is on the landing pad before
+  ;; declaring it safe.
+  ca landing_pad_x0
+  ts temp
+  ca lm_int_x
+  su temp
+  bzmf game_loop_crash
+
+  ca landing_pad_x1
+  su lm_int_x
+  bzmf game_loop_crash
+
   ca marker_1
   write DISPLAY_DATA
   tc wait_display

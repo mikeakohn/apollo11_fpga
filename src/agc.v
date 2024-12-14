@@ -526,7 +526,7 @@ always @(posedge clk) begin
               begin
                 if (qc != 0) begin
                   // bzf
-                  if (reg_a[13:0] == 0) begin
+                  if (reg_a[13:0] == 0 || reg_a[14:0] == 15'h7fff) begin
                     temp <= k;
                     wb_address <= ADDR_Z;
                     state <= STATE_WRITEBACK_0;

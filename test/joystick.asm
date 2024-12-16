@@ -3,11 +3,18 @@
 .include "agc/agc.inc"
 .include "test/extra_io.inc"
 
+interrupt_counter equ 100
+current_time      equ 102
+delay_count       equ 103
+joystick_value    equ 104
+temp              equ 105
+
 ;; Banked at 02000, but based on FB=0, is physically location 0.
 .org 02000
+const_1:
   .dc16 0x0001
-  .dc16 0x7f20
-
+const_7ff0:
+  .dc16 0x7ff0
 const_1f:
   .dc16 0x001f
 
@@ -38,40 +45,41 @@ main:
   relint
 
   ca const_1f
-  ts 105
+  ts temp
 
 while_1:
 wait_busy:
-  ca 02000
+  ca const_1
   rand DISPLAY_CTRL
   bzf wait_busy_exit
   tc wait_busy
 wait_busy_exit:
   tc delay
   read JOYSTICK
-  ts 104
-  msu 105
+  ts joystick_value
+  ;; If joystick is 0x1f (no direction pushed), then don't display the value.
+  su temp
   bzf while_1
-  ca 104
+  ca joystick_value
   write DISPLAY_DATA
   tc while_1
 
   edrupt 0
 
 delay:
-  ca 02000
+  ca const_1
   write IO_DATA
-  ca 02001
-  ts 103
+  ca const_7ff0
+  ts delay_count
 delay_outer_loop:
   ca TIME4
-  ts 102
+  ts current_time
 delay_loop:
   ca TIME4
-  su 102
+  su current_time
   bzf delay_loop
-  incr 103
-  ca 103
+  incr delay_count
+  ca delay_count
   bzmf delay_outer_loop
   ca ZERO
   write IO_DATA
@@ -79,11 +87,11 @@ delay_loop:
 
 interrupt_time:
   xch ARUPT
-  ca 02000
+  ca const_1
   write IO_DATA
 
-  aug 100
-  ca 100
+  aug interrupt_counter
+  ca interrupt_counter
   write DISPLAY_DATA
   xch ARUPT
   qxch QRUPT

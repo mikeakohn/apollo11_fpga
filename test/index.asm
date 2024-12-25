@@ -4,14 +4,14 @@
 .include "test/extra_io.inc"
 
 .org 02000
-  .dc16 0x7ffe
-  .dc16 0x4765
-  .dc16 0x3000
-  .dc16 0x1000
-  .dc16 0x2929
+  .dc16 0x7ffe ; 02000 (-4)
+  .dc16 0x4765 ; 02001 (-3)
+  .dc16 0x3000 ; 02002 (-2)
+  .dc16 0x1000 ; 02003 (-1)
+  .dc16 0x2929 ; 02004 (0)
+  .dc16 0x2925 ; 02005 (1)
+  .dc16 0x2926 ; 02006 (2)
 
-;; Due to the way memory is banked, the address written as 04000 but
-;; physically it's location 06000 (bank 2).
 .org 04000
 main:
   ;ca 02000

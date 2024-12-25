@@ -122,6 +122,7 @@ reg quotient_sign;
 reg [15:0] temp_2;
 reg [2:0] alu_op;
 reg do_complement_read;
+reg temp_sign;
 
 wire [14:0] abs_temp_minus_one;
 assign abs_temp_minus_one = ~temp - 1;
@@ -158,56 +159,54 @@ parameter STATE_READ_EA_1        =  9;
 parameter STATE_EXECUTE_TC_0     = 10;
 parameter STATE_EXECUTE_TC_1     = 11;
 parameter STATE_EXECUTE_ALU      = 12;
-parameter STATE_EXECUTE_ALU_1    = 13;
-parameter STATE_EXECUTE_ALU_2    = 14;
-parameter STATE_EXECUTE_ALU_2S   = 15;
-parameter STATE_EXECUTE_CCS_0    = 16;
-parameter STATE_EXECUTE_CCS_1    = 17;
+parameter STATE_EXECUTE_ALU_2S   = 13;
+parameter STATE_EXECUTE_CCS_0    = 14;
+parameter STATE_EXECUTE_CCS_1    = 15;
 
-parameter STATE_EXECUTE_DAS_0    = 18;
-parameter STATE_EXECUTE_DAS_1    = 19;
-parameter STATE_EXECUTE_DAS_2    = 20;
-parameter STATE_EXECUTE_DAS_3    = 21;
-parameter STATE_EXECUTE_DAS_4    = 22;
+parameter STATE_EXECUTE_DAS_0    = 16;
+parameter STATE_EXECUTE_DAS_1    = 17;
+parameter STATE_EXECUTE_DAS_2    = 18;
+parameter STATE_EXECUTE_DAS_3    = 19;
+parameter STATE_EXECUTE_DAS_4    = 20;
 
-parameter STATE_EXECUTE_XCH_0    = 23;
-parameter STATE_EXECUTE_XCH_1    = 24;
-parameter STATE_EXECUTE_XCH_2    = 25;
-parameter STATE_EXECUTE_XCH_3    = 26;
+parameter STATE_EXECUTE_XCH_0    = 21;
+parameter STATE_EXECUTE_XCH_1    = 22;
+parameter STATE_EXECUTE_XCH_2    = 23;
+parameter STATE_EXECUTE_XCH_3    = 24;
 
-parameter STATE_EXECUTE_DALU_0   = 27;
-parameter STATE_EXECUTE_DALU_1   = 28;
-parameter STATE_EXECUTE_DALU_2   = 29;
-parameter STATE_EXECUTE_DALU_3   = 30;
+parameter STATE_EXECUTE_DALU_0   = 25;
+parameter STATE_EXECUTE_DALU_1   = 26;
+parameter STATE_EXECUTE_DALU_2   = 27;
+parameter STATE_EXECUTE_DALU_3   = 28;
 
-parameter STATE_EXECUTE_RESUME_0 = 31;
-parameter STATE_EXECUTE_RESUME_1 = 32;
+parameter STATE_EXECUTE_RESUME_0 = 29;
+parameter STATE_EXECUTE_RESUME_1 = 30;
 
-parameter STATE_READ_IO_0        = 33;
-parameter STATE_READ_IO_1        = 34;
+parameter STATE_READ_IO_0        = 31;
+parameter STATE_READ_IO_1        = 32;
 
-parameter STATE_MULTIPLY_0       = 35;
-parameter STATE_MULTIPLY_1       = 36;
-parameter STATE_MULTIPLY_2       = 37;
-parameter STATE_MULTIPLY_3       = 38;
-parameter STATE_MULTIPLY_4       = 39;
-parameter STATE_MULTIPLY_5       = 40;
+parameter STATE_MULTIPLY_0       = 33;
+parameter STATE_MULTIPLY_1       = 34;
+parameter STATE_MULTIPLY_2       = 35;
+parameter STATE_MULTIPLY_3       = 36;
+parameter STATE_MULTIPLY_4       = 37;
+parameter STATE_MULTIPLY_5       = 38;
 
-parameter STATE_DIVIDE_0         = 41;
-parameter STATE_DIVIDE_1         = 42;
-parameter STATE_DIVIDE_2         = 43;
+parameter STATE_DIVIDE_0         = 39;
+parameter STATE_DIVIDE_1         = 40;
+parameter STATE_DIVIDE_2         = 41;
 
-parameter STATE_TCAA_0           = 44;
-parameter STATE_TCAA_1           = 45;
+parameter STATE_TCAA_0           = 42;
+parameter STATE_TCAA_1           = 43;
 
-parameter STATE_SET_INDEX        = 46;
+parameter STATE_SET_INDEX        = 44;
 
-parameter STATE_INTERRUPT_0      = 47;
-parameter STATE_INTERRUPT_1      = 48;
-parameter STATE_INTERRUPT_2      = 49;
-parameter STATE_INTERRUPT_3      = 50;
-parameter STATE_INTERRUPT_4      = 51;
-parameter STATE_INTERRUPT_5      = 52;
+parameter STATE_INTERRUPT_0      = 45;
+parameter STATE_INTERRUPT_1      = 46;
+parameter STATE_INTERRUPT_2      = 47;
+parameter STATE_INTERRUPT_3      = 48;
+parameter STATE_INTERRUPT_4      = 49;
+parameter STATE_INTERRUPT_5      = 50;
 
 parameter STATE_WRITEBACK_0      = 57;
 parameter STATE_WRITEBACK_1      = 58;
@@ -668,7 +667,13 @@ always @(posedge clk) begin
       STATE_EXECUTE_ALU:
         begin
           case (alu_op)
-            ALU_OP_ADD:  temp_2 <= reg_a[14:0] + temp[14:0];
+            ALU_OP_ADD:
+              begin
+                temp_sign = temp[14];
+                temp_2 = reg_a[14:0] + temp[14:0];
+                temp[14:0] = temp_2[14:0] + temp_2[15];
+                temp[15] = (temp_sign == reg_a[14] && temp_sign != temp_2[14]);
+              end
             ALU_OP_INCR: temp <= temp + 1;
             ALU_OP_COM:  temp <= { 1'b0, ~temp[14:0] };
             ALU_OP_AND:  temp <= temp & reg_a[14:0];
@@ -676,21 +681,6 @@ always @(posedge clk) begin
             ALU_OP_DIM:  if (temp[13:0] != 0) temp[13:0] <= temp[13:0] - 1;
           endcase
 
-          if (alu_op == ALU_OP_ADD)
-            state <= STATE_EXECUTE_ALU_1;
-          else
-            state <= STATE_WRITEBACK_0;
-        end
-      STATE_EXECUTE_ALU_1:
-        begin
-          // This 1's complement could be wired and not take extra cycles.
-          temp_2 <= temp_2[14:0] + temp_2[15];
-          state <= STATE_EXECUTE_ALU_2;
-        end
-      STATE_EXECUTE_ALU_2:
-        begin
-          temp[14:0] <= temp_2[14:0];
-          temp[15] <= (temp[14] == reg_a[14] && temp[14] != temp_2[14]);
           state <= STATE_WRITEBACK_0;
         end
       STATE_EXECUTE_ALU_2S:
